@@ -23,16 +23,20 @@ def get_data_loaders(
             train_one_epoch, validation and test data loaders
     """
     
-    # We will fill this up later
     data_loaders = {"train": None, "valid": None, "test": None}
 
     base_path = Path(get_data_location())
 
-    # Compute mean and std of the dataset
+    # Compute mean and std of the dataset for data normalization
     mean, std = compute_mean_and_std()
     print(f"Dataset mean: {mean}, std: {std}")
 
-
+    # Data Augmentation: Landmark images can be from different angles and so data augmentation with artificial transforms is needed
+    # Besides, the training dataset are only 5000 images which is small to train to recognize 50 landmarks hence data augmentation is needed
+    # Transforms include Flip (no vertical flip which is an unlikely image), rotation, translation, color jitter (to match different lighting and camera/user customizations)
+    # Transforms include resizing and crop at the end instead of start else images end up with huge and unuseful black borders
+    # Transforms include normalization with the mean and std calculated from the dataset
+    # Training, validation and testing datasets have different transformations as below
     data_transforms = {
         "train": transforms.Compose(
             [
@@ -65,7 +69,7 @@ def get_data_loaders(
         ),
     }
 
-    # Create train and validation datasets
+    # Train and Validation datasets
     train_data = datasets.ImageFolder(
         base_path / "train",
         data_transforms['train']
